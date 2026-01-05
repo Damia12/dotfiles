@@ -51,15 +51,22 @@ config.cell_width = 1.0   -- Asegúrate que esté en 1.0 o 1.1
 -- =========================================================
 -- 3. VENTANA Y PESTAÑAS
 -- =========================================================
-config.initial_cols = 120
-config.initial_rows = 35
+config.initial_cols = 100
+config.initial_rows = 25
 
-config.window_decorations = "INTEGRATED_BUTTONS|RESIZE"
+config.window_decorations = "TITLE | RESIZE"
+--config.window_decorations = "INTEGRATED_BUTTONS|RESIZE"
 config.window_padding = { left = 10, right = 10, top = 10, bottom = 10 }
 
 config.use_fancy_tab_bar = true
 config.tab_bar_at_bottom = true
-config.hide_tab_bar_if_only_one_tab = false
+config.hide_tab_bar_if_only_one_tab = true
+
+config.window_frame = {
+  font_size = 10.5, -- Antes estaba en 0.0, por eso no veías nada
+  active_titlebar_bg = '#1a1b26', 
+  inactive_titlebar_bg = '#16161e',
+}
 
 -- =========================================================
 -- 4. ATAJOS DE TECLADO (KEYS)
