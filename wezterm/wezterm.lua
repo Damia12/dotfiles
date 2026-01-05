@@ -26,11 +26,11 @@ config.scrollback_lines = 10000
 -- 2. APARIENCIA
 -- =========================================================
 config.font = wezterm.font 'MesloLGS Nerd Font'
-config.font_size = 13.0
+config.font_size = 15.0
 config.color_scheme = 'Eldritch'
 
 -- --- CONFIGURACIÓN DEL CURSOR ---
-config.default_cursor_style = 'BlinkingBar'
+config.default_cursor_style = 'BlinkingUnderline'--'SteadyBlock'--'BlinkingBar'
 
 -- 1. Grosor (Prueba con '3px' o '4px'. El normal es '1px')
 config.cursor_thickness = '2px'
@@ -42,6 +42,11 @@ config.cursor_blink_rate = 500
 config.cursor_blink_ease_in = 'Constant'
 config.cursor_blink_ease_out = 'Constant'
 
+config.unicode_version = 14
+config.char_select_font_size = 13.0
+-- Si el cursor se ve "encima" de la letra, esto le da un respiro horizontal
+config.line_height = 1.1  -- Un poco de aire vertical
+config.cell_width = 1.0   -- Asegúrate que esté en 1.0 o 1.1
 
 -- =========================================================
 -- 3. VENTANA Y PESTAÑAS
