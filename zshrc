@@ -186,7 +186,7 @@ alias ls='eza --icons --group-directories-first'
 alias ll='eza -lh --icons --group-directories-first'
 alias la='eza -lah --icons --group-directories-first'
 alias tree='eza --tree --icons'
-
+alias cat='bat'
 alias c='clear'
 alias qq='exit'
 
