@@ -1,0 +1,25 @@
+[manager]
+ratio = [1, 3, 4]        # proporción columnas: padre | actual | preview
+sort_by = "natural"      # natural, alphabetical, size, mtime
+sort_dir_first = true    # carpetas primero
+show_hidden = false      # archivos ocultos (toggle con . en runtime)
+show_symlink = true      # muestra destino de symlinks
+
+[preview]
+tab_size = 2
+max_width = 600
+max_height = 900
+# Si usas kitty, las imágenes se ven nativamente:
+image_filter = "triangle"
+
+[opener]
+# Define con qué abrir cada tipo de archivo
+edit = [
+  { run = 'nvim "$@"', block = true }
+]
+
+[open]
+rules = [
+  { mime = "text/*", use = "edit" },
+  { mime = "image/*", use = "open" },
+]

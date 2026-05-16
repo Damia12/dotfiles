@@ -14,9 +14,13 @@ fi
 # ─────────────────────────────────────────────────────────────────────────────
 export EDITOR='nvim'
 export TERMINAL='kitty'
+export LS_COLORS="$(vivid generate dracula)"
 
 # Opciones globales de fzf: altura, layout, borde y símbolos del prompt/cursor.
 # Se aplican a cualquier invocación de fzf, incluyendo fzf-tab y fzf-history.
+export FZF_DEFAULT_COMMAND='fd --type f --hidden --exclude .git'
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+export FZF_ALT_C_COMMAND='fd --type d --hidden --exclude .git'
 export FZF_DEFAULT_OPTS='
   --height 40%
   --layout=reverse
@@ -185,13 +189,20 @@ zle -N fzf-history-widget
 alias ls='eza --icons --group-directories-first'
 alias ll='eza -lh --icons --group-directories-first'
 alias la='eza -lah --icons --group-directories-first'
-alias tree='eza --tree --icons'
-alias cat='bat'
+alias treee='eza -T --icons -a --git --ignore-glob=".git|.gitignore|node_modules|dist|build|__pycache__"'
+alias tree='eza -T -L 2 --icons -a --git --ignore-glob=".git|.gitignore|node_modules|dist|build|__pycache__"'
+alias cat='bat --style=numbers'
+alias grep='grep --color=auto'
+alias ..='cd ..'
+alias ...='cd ../..'
+alias mkdir='mkdir -p'
+
 alias c='clear'
 alias qq='exit'
 
 # zi está reservado para zoxide (ver abajo); este alias añade score al output.
 alias zi='zoxide query -i --score'
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # FUNCIONES
@@ -223,3 +234,4 @@ eval "$(zoxide init --cmd cd zsh)"
 # Edita ~/.p10k.zsh o corre `p10k configure` para personalizar.
 # ─────────────────────────────────────────────────────────────────────────────
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+export PATH=$HOME/.local/bin:$PATH
