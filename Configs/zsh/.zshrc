@@ -199,7 +199,7 @@ alias ..='cd ..'
 alias ...='cd ../..'
 alias mkdir='mkdir -p'
 
-alias c='clear'
+alias c='printf "\e[H\e[2J\e[3J"'
 alias qq='exit'
 
 # zi está reservado para zoxide (ver abajo); este alias añade score al output.
