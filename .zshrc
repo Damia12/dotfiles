@@ -14,7 +14,9 @@ fi
 # ─────────────────────────────────────────────────────────────────────────────
 export EDITOR='nvim'
 export TERMINAL='kitty'
-export LS_COLORS="$(vivid generate dracula)"
+# tokyonight-moon: alternativa a catppuccin-macchiato, probando cuál se ve mejor
+# (vivid no trae un tema Eldritch propio; ver eldritch-theme-palette en memoria).
+export LS_COLORS="$(vivid generate tokyonight-moon)"
 
 # Opciones globales de fzf: altura, layout, borde y símbolos del prompt/cursor.
 # Se aplican a cualquier invocación de fzf, incluyendo fzf-tab y fzf-history.
@@ -203,6 +205,7 @@ alias qq='exit'
 # zi está reservado para zoxide (ver abajo); este alias añade score al output.
 alias zi='zoxide query -i --score'
 
+alias rsyncv='rsync -avh --info=progress2'
 
 # ─────────────────────────────────────────────────────────────────────────────
 # FUNCIONES
