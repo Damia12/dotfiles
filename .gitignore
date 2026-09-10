@@ -4,3 +4,6 @@
 # Configs/claude/.claude/CLAUDE.md, que si forma parte del repo.
 /CLAUDE.md
 /AGENTS.md
+
+# Worktrees temporales que crean los agentes al trabajar aislados.
+/.claude/worktrees/
