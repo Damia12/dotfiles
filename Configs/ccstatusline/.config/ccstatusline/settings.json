@@ -1,0 +1,168 @@
+{
+  "version": 3,
+  "lines": [
+    [
+      {
+        "id": "cb4ce81b-9376-45c3-a20d-07627ced9f22",
+        "type": "git-root-dir",
+        "color": "hex:04D1F9",
+        "metadata": {
+          "hideNoGit": "true"
+        }
+      },
+      {
+        "id": "a3f5c9d1-1e2b-4c8a-9f3d-7b6e5a4c2d1f",
+        "type": "separator",
+        "character": ":",
+        "color": "hex:5B5C66"
+      },
+      {
+        "id": "667e2202-f005-41ef-b6f3-aace1247dd63",
+        "type": "git-branch",
+        "character": "",
+        "color": "hex:A48CF2",
+        "metadata": {
+          "hideNoGit": "true"
+        },
+        "rawValue": true
+      },
+      {
+        "id": "6096fb10-c3c4-4895-b37c-1465b362fb0b",
+        "type": "git-unstaged",
+        "character": " *",
+        "color": "hex:F16C75",
+        "rawValue": false,
+        "metadata": {
+          "hideNoGit": "true"
+        }
+      },
+      {
+        "id": "ae998044-c1b4-4047-be36-c0b2afa1e201",
+        "type": "custom-command",
+        "commandPath": "node C:/Users/Felipe/.config/ccstatusline/scripts/cwd-if-no-git.js",
+        "timeout": 500,
+        "color": "hex:04D1F9"
+      },
+      {
+        "id": "56a6fd0f-4302-4385-aa75-adafc3ba1c9e",
+        "type": "separator",
+        "color": "hex:5B5C66"
+      },
+      {
+        "id": "f0e1d2c3-b4a5-4968-9c7d-6e5f4a3b2c1d",
+        "type": "custom-command",
+        "commandPath": "node C:/Users/Felipe/.config/ccstatusline/scripts/model-glyph.js",
+        "timeout": 500,
+        "color": "hex:F265B5"
+      },
+      {
+        "id": "d4e6f8a0-5b7c-4930-ae4d-8f6b0c2e4a6d",
+        "type": "custom-text",
+        "customText": " ",
+        "color": "hex:F265B5"
+      },
+      {
+        "id": "9c372342-130b-498f-8399-c72b26b35aeb",
+        "type": "model",
+        "rawValue": true,
+        "color": "hex:F265B5"
+      },
+      {
+        "id": "968f747b-b31b-4f08-84eb-7c83220ef926",
+        "type": "custom-text",
+        "customText": " · ",
+        "color": "hex:5B5C66"
+      },
+      {
+        "id": "4439b43b-49df-47f4-a06a-5b47c03d9636",
+        "type": "thinking-effort",
+        "rawValue": true,
+        "color": "hex:F7C67F"
+      },
+      {
+        "id": "44698f06-57cf-473a-91d6-25d80df53d9f",
+        "type": "separator",
+        "color": "hex:5B5C66"
+      },
+      {
+        "id": "c7c08073-ccab-451d-aef0-bb7cafe5aeae",
+        "type": "session-usage",
+        "rawValue": true,
+        "color": "hex:37F499"
+      },
+      {
+        "id": "5f8a5208-e2dc-4777-b12a-d29e0645b331",
+        "type": "separator",
+        "color": "hex:5B5C66"
+      },
+      {
+        "id": "6f9d1637-eb38-44c2-b0f3-7cb967086905",
+        "type": "reset-timer",
+        "rawValue": true,
+        "color": "hex:F1FC79"
+      },
+      {
+        "id": "096992c4-3d4f-4142-a7eb-19a8bc2ed4c8",
+        "type": "separator",
+        "color": "hex:5B5C66"
+      },
+      {
+        "id": "e5d33a20-2905-444c-8b88-d2246eaf38a6",
+        "type": "context-percentage-usable",
+        "rawValue": true,
+        "color": "hex:37F499"
+      },
+      {
+        "id": "c2d3e4f5-a6b7-4890-9c1d-2e3f4a5b6c7d",
+        "type": "separator",
+        "color": "hex:5B5C66"
+      },
+      {
+        "id": "d3e4f5a6-b7c8-4901-9d2e-3f4a5b6c7d8e",
+        "type": "context-length",
+        "rawValue": true,
+        "color": "hex:7081D0"
+      },
+      {
+        "id": "e4f5a6b7-c8d9-4a12-9e3f-4a5b6c7d8e9f",
+        "type": "custom-text",
+        "customText": " / ",
+        "color": "hex:5B5C66"
+      },
+      {
+        "id": "f5a6b7c8-d9e0-4b23-9f4a-5b6c7d8e9f0a",
+        "type": "context-window",
+        "rawValue": true,
+        "color": "hex:7081D0"
+      }
+    ],
+    [],
+    []
+  ],
+  "flexMode": "full-minus-40",
+  "compactThreshold": 60,
+  "colorLevel": 3,
+  "defaultPaddingSide": "both",
+  "inheritSeparatorColors": false,
+  "globalBold": true,
+  "gitCacheTtlSeconds": 5,
+  "minimalistMode": false,
+  "powerline": {
+    "enabled": false,
+    "separators": [
+      ""
+    ],
+    "separatorInvertBackground": [
+      false
+    ],
+    "startCaps": [],
+    "endCaps": [],
+    "autoAlign": false,
+    "continueThemeAcrossLines": false
+  },
+  "installation": {
+    "method": "pinned",
+    "installedVersion": "2.2.27"
+  },
+  "defaultPadding": ""
+}

@@ -1,0 +1,33 @@
+{
+  "model": "opus",
+  "statusLine": {
+    "type": "command",
+    "command": "ccstatusline",
+    "padding": 0,
+    "refreshInterval": 10
+  },
+  "enabledPlugins": {
+    "context7@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true,
+    "playwright@claude-plugins-official": true,
+    "mattpocock-skills@claude-plugins-official": true
+  },
+  "language": "español",
+  "modelSettings": {
+    "claude-opus-5": {
+      "effortLevel": "xhigh"
+    },
+    "claude-sonnet-5": {
+      "effortLevel": "medium"
+    }
+  },
+  "askUserQuestionTimeout": "never",
+  "autoUpdatesChannel": "latest",
+  "theme": "dark-ansi",
+  "editorMode": "normal",
+  "preferredNotifChannel": "auto",
+  "autoContinueAtUsageLimit": false,
+  "remoteControlAtStartup": false,
+  "inputNeededNotifEnabled": true,
+  "agentPushNotifEnabled": false
+}
