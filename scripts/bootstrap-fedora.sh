@@ -3,7 +3,7 @@
 # dotfiles da por sentado que ya existe. Correr esto ANTES de install.sh.
 #
 # No incluye tuckr (se instala via cargo en install.sh) ni fuentes Nerd Font
-# (revisar Hooks/kitty/post.sh y descargar la que corresponda a mano).
+# (revisar Hooks/kitty_linux/post.sh y descargar la que corresponda a mano).
 
 set -euo pipefail
 
@@ -33,5 +33,5 @@ sudo npm install -g ccstatusline
 
 echo ""
 echo "Listo. Pasos manuales que este script no puede hacer:"
-echo "  - Instalar la fuente 'JetBrainsMono Nerd Font Mono' (ver Hooks/kitty/post.sh)."
+echo "  - Instalar la fuente 'JetBrainsMono Nerd Font Mono' (ver Hooks/kitty_linux/post.sh)."
 echo "  - Correr scripts/install.sh para desplegar los dotfiles con tuckr."

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # Corre despues de desplegar el grupo "kitty" (via `tuckr set kitty`).
+# La carpeta lleva sufijo _linux para que tuckr no la considere en Windows;
+# el nombre que se teclea sigue siendo "kitty", sin sufijo.
 # kitty.conf pide JetBrainsMono Nerd Font Mono (kitty.conf:5) — sin ella,
 # todos los glifos de la statusline y del tema se ven mal, no es solo un icono.
 

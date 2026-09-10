@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # Corre despues de desplegar el grupo "zsh" (via `tuckr set zsh`).
+# La carpeta lleva sufijo _linux para que tuckr no la considere en Windows;
+# el nombre que se teclea sigue siendo "zsh", sin sufijo.
 # Ofrece poner zsh como shell por defecto si todavia no lo es.
 # Pide confirmacion explicita: cambiar la shell de login no se hace sin avisar.
 

@@ -3,7 +3,7 @@
 # bootstrap-fedora.sh instala a proposito. Equivalente Linux del
 # `winget export -o packages.json` que ya se usa del lado Windows.
 #
-# Uso: scripts/packages.sh > scripts/packages-snapshot.txt
+# Uso: scripts/packages-linux.sh > scripts/packages-snapshot.txt
 # Se vuelve obsoleto con el tiempo -- regenerar antes de confiar en el.
 
 set -euo pipefail
