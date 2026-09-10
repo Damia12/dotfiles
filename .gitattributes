@@ -1,0 +1,9 @@
+# Los hooks y los scripts se ejecutan en Linux: tienen que conservar LF aunque
+# se editen o se clonen desde Windows (esta maquina tiene core.autocrlf=true).
+# Con CRLF, bash falla con "bad interpreter: /usr/bin/env bash^M".
+*.sh text eol=lf
+.zshrc text eol=lf
+.p10k.zsh text eol=lf
+
+# El perfil de PowerShell vive del lado Windows.
+*.ps1 text eol=crlf
