@@ -1,0 +1,6 @@
+# Contexto local para agentes (Claude Code / Codex). No se versiona:
+# describe el estado de la maquina y de la migracion, no la configuracion.
+# Ojo con la barra inicial: sin ella este patron taparia tambien
+# Configs/claude/.claude/CLAUDE.md, que si forma parte del repo.
+/CLAUDE.md
+/AGENTS.md
