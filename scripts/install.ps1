@@ -33,10 +33,10 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-function Write-Paso    { param([string] $Texto) Write-Host "`n==> $Texto" -ForegroundColor Cyan }
-function Write-Ok      { param([string] $Texto) Write-Host "    OK    $Texto" -ForegroundColor Green }
-function Write-Aviso   { param([string] $Texto) Write-Host "    AVISO $Texto" -ForegroundColor Yellow }
-function Write-Falla   { param([string] $Texto) Write-Host "    ERROR $Texto" -ForegroundColor Red }
+function Write-Paso { param([string] $Texto) Write-Host "`n==> $Texto" -ForegroundColor Cyan }
+function Write-Ok { param([string] $Texto) Write-Host "    OK    $Texto" -ForegroundColor Green }
+function Write-Aviso { param([string] $Texto) Write-Host "    AVISO $Texto" -ForegroundColor Yellow }
+function Write-Falla { param([string] $Texto) Write-Host "    ERROR $Texto" -ForegroundColor Red }
 
 function Test-Comando {
     param([string] $Nombre)
@@ -66,15 +66,18 @@ try {
         -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock' `
         -Name 'AllowDevelopmentWithoutDevLicense' -ErrorAction Stop
     $modoDesarrollador = ($clave.AllowDevelopmentWithoutDevLicense -eq 1)
-} catch {
+}
+catch {
     $modoDesarrollador = $false
 }
 
 if ($esAdmin) {
     Write-Ok "esta sesion es administrador"
-} elseif ($modoDesarrollador) {
+}
+elseif ($modoDesarrollador) {
     Write-Ok "Modo Desarrollador activado"
-} else {
+}
+else {
     Write-Falla "no puedes crear symlinks: ni administrador ni Modo Desarrollador."
     Write-Host "          Cualquiera de estas dos lo arregla:"
     Write-Host "            - abrir PowerShell como administrador y repetir, o"
@@ -91,7 +94,8 @@ Write-Paso "Comprobando tuckr"
 
 if (Test-Comando 'tuckr') {
     Write-Ok "ya instalado en $((Get-Command tuckr).Source)"
-} else {
+}
+else {
     Write-Aviso "no esta instalado, hay que compilarlo."
 
     if (-not (Test-Comando 'cargo')) {
@@ -121,7 +125,8 @@ if (Test-Comando 'tuckr') {
 
     if ($DryRun) {
         Write-Host "    [dry-run] correria: cargo install tuckr"
-    } else {
+    }
+    else {
         Write-Host "    Compilando tuckr (tarda ~30 s)..."
         # Ojo: se compila desde PowerShell, no desde Git Bash. En Git Bash el
         # link.exe de GNU coreutils se antepone al de Microsoft y rompe el enlazado.
@@ -163,9 +168,11 @@ if ($statusFallo -and -not $Force) {
     Write-Host "            - repetir con -Force si sabes lo que haces"
     if (-not $DryRun) { exit 1 }
     Write-Aviso "en dry-run sigo igual, para mostrarte el resto del plan."
-} elseif ($statusFallo) {
+}
+elseif ($statusFallo) {
     Write-Aviso "hay conflictos, pero -Force esta activo: sigo adelante."
-} else {
+}
+else {
     Write-Ok "sin conflictos"
 }
 

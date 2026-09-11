@@ -29,8 +29,8 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-function Write-Paso  { param([string] $T) Write-Host "`n==> $T" -ForegroundColor Cyan }
-function Write-Ok    { param([string] $T) Write-Host "    OK    $T" -ForegroundColor Green }
+function Write-Paso { param([string] $T) Write-Host "`n==> $T" -ForegroundColor Cyan }
+function Write-Ok { param([string] $T) Write-Host "    OK    $T" -ForegroundColor Green }
 function Write-Salta { param([string] $T) Write-Host "    YA    $T" -ForegroundColor DarkGray }
 function Write-Aviso { param([string] $T) Write-Host "    AVISO $T" -ForegroundColor Yellow }
 function Write-Falla { param([string] $T) Write-Host "    ERROR $T" -ForegroundColor Red }
@@ -144,7 +144,8 @@ foreach ($p in $paquetes) {
     winget install --id $p.Id -e --accept-package-agreements --accept-source-agreements
     if ($LASTEXITCODE -eq 0) {
         Write-Ok $p.Id
-    } else {
+    }
+    else {
         Write-Aviso "$($p.Id) termino con codigo $LASTEXITCODE — revisalo a mano."
     }
 }
@@ -160,7 +161,8 @@ Write-Paso "Comprobando el linker de MSVC (para compilar tuckr)"
 
 if ($SinBuildTools) {
     Write-Salta "omitido por -SinBuildTools"
-} else {
+}
+else {
     $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
     $rutaMsvc = $null
     if (Test-Path $vswhere) {
@@ -171,9 +173,11 @@ if ($SinBuildTools) {
 
     if (-not [string]::IsNullOrWhiteSpace($rutaMsvc)) {
         Write-Salta "MSVC ya esta en $rutaMsvc"
-    } elseif ($DryRun) {
+    }
+    elseif ($DryRun) {
         Write-Host "    [dry-run] instalaria Microsoft.VisualStudio.2022.BuildTools (varios GB)"
-    } else {
+    }
+    else {
         Write-Aviso "falta MSVC. Son varios GB y tarda; sin el, install.ps1 no puede compilar tuckr."
         winget install --id Microsoft.VisualStudio.2022.BuildTools -e `
             --accept-package-agreements --accept-source-agreements `
@@ -199,24 +203,30 @@ $env:PATH = [Environment]::GetEnvironmentVariable('PATH', 'Machine') + ';' +
 
 if (Get-Command ccstatusline -ErrorAction SilentlyContinue) {
     Write-Salta "ccstatusline (ya responde)"
-} elseif ($DryRun) {
+}
+elseif ($DryRun) {
     Write-Host "    [dry-run] correria: npm install -g ccstatusline"
-} elseif (Get-Command npm -ErrorAction SilentlyContinue) {
+}
+elseif (Get-Command npm -ErrorAction SilentlyContinue) {
     npm install -g ccstatusline
     if ($LASTEXITCODE -eq 0) { Write-Ok "ccstatusline" } else { Write-Aviso "npm fallo" }
-} else {
+}
+else {
     Write-Aviso "npm no responde todavia — abre una terminal nueva y corre: npm install -g ccstatusline"
 }
 
 if (Get-Command gallery-dl -ErrorAction SilentlyContinue) {
     Write-Salta "gallery-dl (ya responde)"
-} elseif ($DryRun) {
+}
+elseif ($DryRun) {
     Write-Host "    [dry-run] correria: pip install gallery-dl"
-} elseif (Get-Command pip -ErrorAction SilentlyContinue) {
+}
+elseif (Get-Command pip -ErrorAction SilentlyContinue) {
     # Sin --user a proposito: asi cae en Python3xx\Scripts, que ya esta en el PATH.
     pip install gallery-dl
     if ($LASTEXITCODE -eq 0) { Write-Ok "gallery-dl" } else { Write-Aviso "pip fallo" }
-} else {
+}
+else {
     Write-Aviso "pip no responde todavia — abre una terminal nueva y corre: pip install gallery-dl"
 }
 
@@ -318,7 +328,8 @@ foreach ($d in $duplicados) {
 foreach ($e in $entradas) {
     if (-not (Test-Path $e)) {
         Write-Aviso "no existe: $e"
-    } elseif (-not (Get-Item $e -ErrorAction SilentlyContinue).PSIsContainer) {
+    }
+    elseif (-not (Get-Item $e -ErrorAction SilentlyContinue).PSIsContainer) {
         Write-Aviso "es un archivo, no una carpeta: $e"
     }
 }
