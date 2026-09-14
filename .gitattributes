@@ -7,3 +7,8 @@
 
 # El perfil de PowerShell vive del lado Windows.
 *.ps1 text eol=crlf
+
+# Los hooks de Windows son batch: cmd necesita CRLF, con LF falla de forma
+# erratica en etiquetas, goto y bloques entre parentesis.
+*.cmd text eol=crlf
+*.bat text eol=crlf
