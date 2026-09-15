@@ -8,13 +8,16 @@
     (bootstrap-windows.ps1). El paso 2 no puede depender de algo que
     el paso 1 todavia no instalo. PowerShell si viene de fabrica.
 
-    Las tres comprobaciones que install.sh no necesita en Linux:
-      1. el linker de MSVC, sin el cual `cargo install tuckr` falla
-         con un error de enlazado que no dice que falta;
-      2. permiso para crear symlinks, que en Windows exige ser
+    Lo que hace de mas respecto a install.sh, porque Windows lo necesita:
+      1. comprueba el permiso para crear symlinks, que aqui exige ser
          administrador o tener el Modo Desarrollador activado;
-      3. conflictos previos, porque `tuckr set` sobre archivos reales
-         que ya existen no es una operacion inocente.
+      2. comprueba el linker de MSVC, sin el cual `cargo install tuckr`
+         falla con un error de enlazado que no dice que falta;
+      3. crea ~\.gitconfig.local ANTES de enlazar, leyendo nombre y email
+         del .gitconfig actual (en Linux eso lo hace Hooks/git/post.sh
+         despues de enlazar, pero ese hook no puede correr en Windows);
+      4. comprueba conflictos previos, porque `tuckr set` sobre archivos
+         reales que ya existen no es una operacion inocente.
 
     Uso:
       .\scripts\install.ps1              despliega
@@ -146,7 +149,79 @@ if ((Test-Path $cargoBin) -and ($env:PATH -notlike "*$cargoBin*")) {
 }
 
 # ---------------------------------------------------------------------------
-# 3. Conflictos previos
+# 3. ~\.gitconfig.local (lo que Hooks/git/post.sh hace en Linux)
+# ---------------------------------------------------------------------------
+# El .gitconfig del repo es portable: no lleva [user], autocrlf ni [credential].
+# Eso vive en ~\.gitconfig.local, que el .gitconfig incluye al final y nunca se
+# versiona. En Linux lo crea el hook de git despues de enlazar; en Windows ese
+# hook no puede correr (tuckr lo lanza con `cmd /c`, ver Hooks/git/post.sh), asi
+# que se hace aqui, y ademas ANTES de enlazar: si tuckr reemplaza el .gitconfig
+# actual sin que el .local exista, git se queda sin nombre ni email.
+#
+# Ventaja sobre el hook: no hace falta preguntar. El .gitconfig actual ya tiene
+# los datos y se leen de ahi. Solo se pregunta en una maquina nueva donde no
+# haya nada, igual que en Linux.
+
+Write-Paso "Preparando ~\.gitconfig.local"
+
+$gitLocal = Join-Path $env:USERPROFILE '.gitconfig.local'
+
+if (Test-Path $gitLocal) {
+    Write-Ok "ya existe, no se toca"
+}
+elseif (-not (Test-Comando 'git')) {
+    Write-Aviso "git no esta en el PATH, no puedo leer la config actual. Crea $gitLocal a mano."
+}
+else {
+    # Se lee del .gitconfig actual ANTES de que tuckr lo reemplace por el enlace.
+    $gitNombre   = (git config --global user.name 2>$null)
+    $gitEmail    = (git config --global user.email 2>$null)
+    $gitAutocrlf = (git config --global core.autocrlf 2>$null)
+    $gitCred     = (git config --global credential.helper 2>$null)
+
+    if ([string]::IsNullOrWhiteSpace($gitNombre) -or [string]::IsNullOrWhiteSpace($gitEmail)) {
+        if ($DryRun) {
+            Write-Host "    [dry-run] no hay nombre/email en el .gitconfig actual: los preguntaria"
+            $gitNombre = '<nombre>'
+            $gitEmail = '<email>'
+        }
+        else {
+            Write-Host "    No hay nombre/email de git configurados. Los armamos ahora."
+            $gitNombre = Read-Host "    Nombre para git"
+            $gitEmail = Read-Host "    Email para git"
+        }
+    }
+    else {
+        Write-Ok "leidos del .gitconfig actual: $gitNombre <$gitEmail>"
+    }
+
+    # Valores por defecto de Windows si el .gitconfig actual no los tenia.
+    if ([string]::IsNullOrWhiteSpace($gitAutocrlf)) { $gitAutocrlf = 'true' }
+    if ([string]::IsNullOrWhiteSpace($gitCred)) { $gitCred = 'manager' }
+
+    $contenidoLocal = @"
+[user]
+    name = $gitNombre
+    email = $gitEmail
+[core]
+    autocrlf = $gitAutocrlf
+[credential]
+    helper = $gitCred
+"@
+
+    if ($DryRun) {
+        Write-Host "    [dry-run] crearia $gitLocal con:"
+        $contenidoLocal -split "`n" | ForEach-Object { Write-Host "        $_" }
+    }
+    else {
+        # UTF-8 sin BOM: git no entiende el BOM que Set-Content pone en 5.1.
+        [IO.File]::WriteAllText($gitLocal, $contenidoLocal + "`n", (New-Object Text.UTF8Encoding $false))
+        Write-Ok "creado $gitLocal"
+    }
+}
+
+# ---------------------------------------------------------------------------
+# 4. Conflictos previos
 # ---------------------------------------------------------------------------
 # Un grupo "en conflicto" es uno cuyo destino ya tiene un archivo real. Pasa
 # siempre la primera vez, porque las configs se copiaron al repo DESDE la
@@ -162,10 +237,12 @@ Write-Host $salidaStatus
 
 if ($statusFallo -and -not $Force) {
     Write-Falla "hay grupos en conflicto (ver la tabla de arriba)."
-    Write-Host "          El destino ya tiene archivos reales. Opciones:"
-    Write-Host "            - 'tuckr set <grupo> --adopt' para que tuckr absorba al repo el archivo actual"
-    Write-Host "            - mover los originales a mano y repetir"
-    Write-Host "            - repetir con -Force si sabes lo que haces"
+    Write-Host "          El destino ya tiene archivos reales que el enlace reemplazaria. Opciones:"
+    Write-Host "            - repetir con -Force: reemplaza esos archivos por enlaces al repo."
+    Write-Host "              Seguro si son copias de lo que hay en el repo. El .gitconfig.local ya"
+    Write-Host "              quedo listo arriba, asi que git no pierde tu nombre ni tu email."
+    Write-Host "            - mover los originales a mano y repetir."
+    Write-Host "          Evita 'tuckr set --adopt': copia tus archivos AL repo, con tu email dentro."
     if (-not $DryRun) { exit 1 }
     Write-Aviso "en dry-run sigo igual, para mostrarte el resto del plan."
 }
@@ -177,7 +254,7 @@ else {
 }
 
 # ---------------------------------------------------------------------------
-# 4. Desplegar
+# 5. Desplegar
 # ---------------------------------------------------------------------------
 # `tuckr set` despliega y ademas corre los hooks del grupo. El comodin va
 # entre comillas para que lo interprete tuckr y no PowerShell.
