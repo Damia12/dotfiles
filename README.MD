@@ -21,7 +21,7 @@ Para ver qué haría sin tocar nada:
 $env:DOTFILES_DRYRUN = 1; irm https://raw.githubusercontent.com/Damia12/dotfiles/main/scripts/init-windows.ps1 | iex
 ```
 
-### Linux (Fedora)
+### Linux
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Damia12/dotfiles/main/scripts/init-fedora.sh | bash
