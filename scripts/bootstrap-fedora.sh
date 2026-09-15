@@ -21,7 +21,13 @@ sudo dnf install -y \
   vivid \
   cargo \
   nodejs \
-  npm
+  npm \
+  gh
+
+# gh no es por la CLI de GitHub en si: es porque `gh auth login` deja a git
+# recordando tus credenciales para push por HTTPS. Sin eso, Fedora pide usuario
+# y token en CADA push, porque no trae gestor de credenciales de serie (Windows
+# si: Git Credential Manager viene con Git for Windows).
 
 if ! command -v yazi >/dev/null 2>&1; then
   echo "AVISO: 'yazi' no esta en los repos de dnf en muchas versiones de Fedora." >&2
@@ -34,4 +40,8 @@ sudo npm install -g ccstatusline
 echo ""
 echo "Listo. Pasos manuales que este script no puede hacer:"
 echo "  - Instalar la fuente 'JetBrainsMono Nerd Font Mono' (ver Hooks/kitty_linux/post.sh)."
-echo "  - Correr scripts/install.sh para desplegar los dotfiles con tuckr."
+echo "  - Correr scripts/install.sh para desplegar los dotfiles con tuckr"
+echo "    (si llegaste aqui por init-fedora.sh, lo lanza solo a continuacion)."
+echo "  - Autenticarte, porque es tu identidad y no se puede automatizar:"
+echo "      gh auth login      -> abre el navegador y deja git recordando tus credenciales"
+echo "      claude login"
