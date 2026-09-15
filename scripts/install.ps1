@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
     Despliega los dotfiles en Windows con tuckr.
     Equivalente de scripts/install.sh, que hace lo mismo en Linux.
@@ -119,7 +119,7 @@ else {
     }
 
     if ([string]::IsNullOrWhiteSpace($rutaMsvc)) {
-        Write-Falla "falta el linker de MSVC — 'cargo install tuckr' fallaria con un error opaco."
+        Write-Falla "falta el linker de MSVC - 'cargo install tuckr' fallaria con un error opaco."
         Write-Host "          Instalalo con (todo en una linea):"
         Write-Host '            winget install --id Microsoft.VisualStudio.2022.BuildTools -e --override "--wait --quiet --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"'
         exit 1
@@ -274,3 +274,32 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "`nListo. Corre 'tuckr status' para confirmar." -ForegroundColor Green
+
+# ---------------------------------------------------------------------------
+# 6. Lo que no se puede automatizar
+# ---------------------------------------------------------------------------
+# Todo lo de abajo es autenticarse en un servicio externo. Automatizarlo
+# significaria guardar un token o una clave privada en el repo, y eso es lo
+# unico que este repo prohibe. Se recuerda aqui, al final, que es cuando toca.
+
+# $gitEmail solo existe si el paso 3 lo leyo; si el .local ya estaba, se lee de ahi.
+$emailSsh = git config --global user.email 2>$null
+if ([string]::IsNullOrWhiteSpace($emailSsh)) { $emailSsh = 'tu@email' }
+
+Write-Host ""
+Write-Host "Queda a mano (es tu identidad, no se puede automatizar):" -ForegroundColor Yellow
+Write-Host ""
+Write-Host "  1. Claude Code:"
+Write-Host "       claude login"
+Write-Host ""
+Write-Host "  2. GitHub, para poder hacer push. Elige una:"
+Write-Host "     a) HTTPS, sin configurar nada: al primer 'git push', Git Credential Manager"
+Write-Host "        abre el navegador, te autenticas y guarda el token. El remoto ya es HTTPS"
+Write-Host "        si clonaste con init-windows.ps1."
+Write-Host "     b) SSH, si la prefieres:"
+Write-Host "          ssh-keygen -t ed25519 -C `"$emailSsh`""
+Write-Host "          Get-Content `$env:USERPROFILE\.ssh\id_ed25519.pub | Set-Clipboard"
+Write-Host "        pega la clave en https://github.com/settings/keys y cambia el remoto:"
+Write-Host "          git -C `$env:APPDATA\dotfiles remote set-url origin git@github.com:Damia12/dotfiles.git"
+Write-Host ""
+Write-Host "  3. Abre una terminal nueva: el perfil de PowerShell recien enlazado carga al arrancar."

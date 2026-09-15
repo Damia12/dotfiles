@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
     Inventario de software instalado "a mano" con el tiempo, fuera de lo que
     bootstrap-windows.ps1 instala a proposito. Equivalente Windows de

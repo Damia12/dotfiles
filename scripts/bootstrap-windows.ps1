@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
     Instala, en un Windows recien instalado, lo que esta configuracion de
     dotfiles da por sentado que ya existe. Correr esto ANTES de install.ps1.
@@ -13,18 +13,24 @@
     `winget list` sobre una maquina que ya tenia todo funcionando.
 
     Uso:
-      .\scripts\bootstrap-windows.ps1                 instala lo que falte
+      .\scripts\bootstrap-windows.ps1                 instala lo que falte y pregunta si desplegar
+      .\scripts\bootstrap-windows.ps1 -Desplegar      idem, y lanza install.ps1 elevado sin preguntar
       .\scripts\bootstrap-windows.ps1 -DryRun         muestra el plan, no toca nada
       .\scripts\bootstrap-windows.ps1 -SinBuildTools  omite Visual Studio Build Tools
 
-    Si la Execution Policy lo bloquea:
+    En un Windows recien instalado no hace falta ni clonar a mano: ver
+    scripts/init-windows.ps1, que instala git, clona y llama a este con -Desplegar.
+
+    La primera vez, la Execution Policy (Restricted de fabrica) lo bloquea:
       powershell -ExecutionPolicy Bypass -File .\scripts\bootstrap-windows.ps1
+    Despues ya no: el propio script deja RemoteSigned para el usuario.
 #>
 
 [CmdletBinding()]
 param(
     [switch] $DryRun,
-    [switch] $SinBuildTools
+    [switch] $SinBuildTools,
+    [switch] $Desplegar
 )
 
 $ErrorActionPreference = 'Stop'
@@ -54,6 +60,34 @@ if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
     exit 1
 }
 Write-Ok "winget $(winget --version)"
+
+# ---------------------------------------------------------------------------
+# 0b. Execution Policy
+# ---------------------------------------------------------------------------
+# Windows cliente viene con Restricted: no ejecuta NINGUN .ps1, ni este. Por eso
+# la primera vez se lanza con `-ExecutionPolicy Bypass` (solo vale para ese
+# proceso). Aqui se deja RemoteSigned para el usuario, que es permanente, no
+# pide administrador y permite scripts locales sin firmar. Si una directiva de
+# empresa (GPO) la fija, no se puede cambiar y se avisa.
+
+Write-Paso "Comprobando la Execution Policy"
+
+$policyUsuario = Get-ExecutionPolicy -Scope CurrentUser
+if ($policyUsuario -notin @('Undefined', 'Restricted')) {
+    Write-Salta "ya es $policyUsuario para el usuario"
+}
+elseif ($DryRun) {
+    Write-Host "    [dry-run] pondria RemoteSigned para el usuario actual (ahora: $policyUsuario)"
+}
+else {
+    try {
+        Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force -ErrorAction Stop
+        Write-Ok "RemoteSigned para el usuario actual"
+    }
+    catch {
+        Write-Aviso "no se pudo cambiar (la fija una directiva?). Usa -ExecutionPolicy Bypass al lanzar scripts."
+    }
+}
 
 # El PATH de este proceso puede ser mas viejo que el del registro (si algo se
 # instalo despues de abrir esta terminal). Se refresca antes de comprobar que
@@ -146,7 +180,7 @@ foreach ($p in $paquetes) {
         Write-Ok $p.Id
     }
     else {
-        Write-Aviso "$($p.Id) termino con codigo $LASTEXITCODE — revisalo a mano."
+        Write-Aviso "$($p.Id) termino con codigo $LASTEXITCODE - revisalo a mano."
     }
 }
 
@@ -212,7 +246,7 @@ elseif (Get-Command npm -ErrorAction SilentlyContinue) {
     if ($LASTEXITCODE -eq 0) { Write-Ok "ccstatusline" } else { Write-Aviso "npm fallo" }
 }
 else {
-    Write-Aviso "npm no responde todavia — abre una terminal nueva y corre: npm install -g ccstatusline"
+    Write-Aviso "npm no responde todavia - abre una terminal nueva y corre: npm install -g ccstatusline"
 }
 
 if (Get-Command gallery-dl -ErrorAction SilentlyContinue) {
@@ -227,7 +261,7 @@ elseif (Get-Command pip -ErrorAction SilentlyContinue) {
     if ($LASTEXITCODE -eq 0) { Write-Ok "gallery-dl" } else { Write-Aviso "pip fallo" }
 }
 else {
-    Write-Aviso "pip no responde todavia — abre una terminal nueva y corre: pip install gallery-dl"
+    Write-Aviso "pip no responde todavia - abre una terminal nueva y corre: pip install gallery-dl"
 }
 
 # ---------------------------------------------------------------------------
@@ -345,19 +379,56 @@ if ($pathUsuario.Length -gt 1800) {
 
 Write-Paso "Listo"
 
-if ($DryRun) {
-    Write-Host "`nDry-run terminado. Nada fue modificado." -ForegroundColor Magenta
-    exit 0
-}
-
-if ($faltan.Count -gt 0) {
+if ($faltan.Count -gt 0 -and -not $DryRun) {
     Write-Aviso "sin resolver: $($faltan -join ', ')"
     Write-Host "          Suele bastar con abrir una terminal nueva (el PATH se recarga al arrancar)."
 }
 
-Write-Host ""
-Write-Host "Pasos manuales que este script no puede hacer:" -ForegroundColor Yellow
-Write-Host "  - Poner 'JetBrainsMono Nerd Font' como fuente en Windows Terminal."
-Write-Host "  - Abrir una terminal NUEVA para que el PATH recien escrito tenga efecto."
-Write-Host "  - Correr scripts\install.ps1 para desplegar los dotfiles con tuckr."
-Write-Host "    (necesita PowerShell como administrador, o el Modo Desarrollador activado)"
+# ---------------------------------------------------------------------------
+# 7. Encadenar el despliegue (paso 2) sin cambiar de terminal
+# ---------------------------------------------------------------------------
+# install.ps1 necesita administrador para crear symlinks. En vez de pedir "abre
+# otra terminal como admin y corre esto", se lanza desde aqui en una PowerShell
+# elevada: Windows pide confirmacion (UAC) una vez y listo. Con -NoExit la
+# ventana queda abierta para que se vea el resultado; por eso no se espera.
+#
+# Con -Desplegar (lo que pasa init-windows.ps1) no pregunta. Sin el, pregunta,
+# porque desplegar sobre una maquina que ya tenia configs es decision de quien
+# la usa.
+
+$installPs1 = Join-Path $PSScriptRoot 'install.ps1'
+
+if ($DryRun) {
+    if ($Desplegar) {
+        Write-Host "    [dry-run] lanzaria install.ps1 en una PowerShell elevada (UAC)"
+    }
+    else {
+        Write-Host "    [dry-run] preguntaria si desplegar ahora con install.ps1"
+    }
+    Write-Host "`nDry-run terminado. Nada fue modificado." -ForegroundColor Magenta
+    exit 0
+}
+
+$lanzar = $Desplegar
+if (-not $Desplegar) {
+    Write-Host ""
+    $resp = Read-Host "Desplegar los dotfiles ahora con install.ps1? Windows pedira confirmacion de administrador. [s/N]"
+    $lanzar = ($resp -match '^[sS]')
+}
+
+if ($lanzar) {
+    # pwsh si el bootstrap lo acaba de instalar (el PATH ya se refresco); si no, la 5.1.
+    $shell = if (Get-Command pwsh -ErrorAction SilentlyContinue) { 'pwsh' } else { 'powershell' }
+    Write-Host "    Lanzando install.ps1 elevado con $shell. Acepta el aviso de Windows (UAC)."
+    Start-Process $shell -Verb RunAs -ArgumentList @(
+        '-NoExit', '-ExecutionPolicy', 'Bypass', '-File', "`"$installPs1`""
+    )
+    Write-Host "    El resultado aparece en la ventana nueva."
+}
+else {
+    Write-Host ""
+    Write-Host "Cuando quieras desplegar:" -ForegroundColor Yellow
+    Write-Host "  - Abre PowerShell como administrador (o activa el Modo Desarrollador) y corre:"
+    Write-Host "      $installPs1"
+    Write-Host "  - Si esta terminal es vieja, abre una nueva para que el PATH se recargue."
+}
