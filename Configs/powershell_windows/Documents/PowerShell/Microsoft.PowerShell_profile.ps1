@@ -39,7 +39,7 @@ if ((Test-Path $GitUsrBin) -and ($env:PATH -notlike "*$GitUsrBin*")) {
 # (dot-source) — evita el costo de crear el proceso en cada arranque.
 # Si editas oh-my-posh.toml, corre el bloque de regeneración de abajo.
 Remove-Item env:POSH_THEME -ErrorAction SilentlyContinue
-$ThemePath = 'C:\Users\Felipe\.config\oh-my-posh\oh-my-posh.toml'
+$ThemePath = "$HOME\.config\oh-my-posh\oh-my-posh.toml"
 $OhMyPoshCache = "$env:LOCALAPPDATA\ohmyposh_init.ps1"
 
 # Regenera el caché automáticamente solo si el .toml es más reciente que el

@@ -39,7 +39,7 @@
       {
         "id": "ae998044-c1b4-4047-be36-c0b2afa1e201",
         "type": "custom-command",
-        "commandPath": "node C:/Users/Felipe/.config/ccstatusline/scripts/cwd-if-no-git.js",
+        "commandPath": "node $HOME/.config/ccstatusline/scripts/cwd-if-no-git.js",
         "timeout": 500,
         "color": "hex:04D1F9"
       },
@@ -51,7 +51,7 @@
       {
         "id": "f0e1d2c3-b4a5-4968-9c7d-6e5f4a3b2c1d",
         "type": "custom-command",
-        "commandPath": "node C:/Users/Felipe/.config/ccstatusline/scripts/model-glyph.js",
+        "commandPath": "node $HOME/.config/ccstatusline/scripts/model-glyph.js",
         "timeout": 500,
         "color": "hex:F265B5"
       },
