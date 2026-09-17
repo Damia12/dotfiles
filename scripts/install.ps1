@@ -258,16 +258,24 @@ else {
 # ---------------------------------------------------------------------------
 # `tuckr set` despliega y ademas corre los hooks del grupo. El comodin va
 # entre comillas para que lo interprete tuckr y no PowerShell.
+#
+# -Force tiene que llegar hasta tuckr como --force: sin el, tuckr se niega a
+# reemplazar un archivo que ya existe y no despliega NADA (y marca todos los
+# hooks como fallidos). El -Force del script sirve para dos cosas: seguir pese
+# al aviso de conflictos, y decirle a tuckr que si puede pisar.
 
 Write-Paso "Desplegando dotfiles"
 
+$argsTuckr = @('set', '*')
+if ($Force) { $argsTuckr += '--force' }
+
 if ($DryRun) {
-    Write-Host "    [dry-run] correria: tuckr set '*'"
+    Write-Host "    [dry-run] correria: tuckr $($argsTuckr -join ' ')"
     Write-Host "`nDry-run terminado. Nada fue modificado." -ForegroundColor Magenta
     exit 0
 }
 
-tuckr set '*'
+tuckr @argsTuckr
 if ($LASTEXITCODE -ne 0) {
     Write-Falla "'tuckr set' termino con errores."
     exit 1
