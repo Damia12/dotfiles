@@ -45,8 +45,17 @@ $OhMyPoshCache = "$env:LOCALAPPDATA\ohmyposh_init.ps1"
 # Regenera el caché automáticamente solo si el .toml es más reciente que el
 # caché (es decir, lo editaste desde la última vez que se generó). Comparar
 # una fecha de archivo cuesta ~1ms — nada comparado con relanzar oh-my-posh.exe.
-$NeedsRegen = (-not (Test-Path $OhMyPoshCache)) -or
-((Test-Path $ThemePath) -and ((Get-Item $ThemePath).LastWriteTime -gt (Get-Item $OhMyPoshCache).LastWriteTime))
+#
+# El .toml es un enlace simbólico al repo de dotfiles (tuckr lo despliega así).
+# La fecha de un enlace es la de su creación y NO cambia al editar el archivo
+# real: hay que mirar la del destino, o el caché nunca se regeneraría después
+# de un cambio y el prompt se quedaría en la versión vieja.
+$NeedsRegen = -not (Test-Path $OhMyPoshCache)
+if (-not $NeedsRegen -and (Test-Path $ThemePath)) {
+    $ThemeItem = Get-Item $ThemePath
+    if ($ThemeItem.LinkType) { $ThemeItem = $ThemeItem.ResolveLinkTarget($true) }
+    $NeedsRegen = $ThemeItem.LastWriteTime -gt (Get-Item $OhMyPoshCache).LastWriteTime
+}
 
 if ($NeedsRegen -and (Test-Path $ThemePath)) {
     oh-my-posh init pwsh --config $ThemePath | Out-File $OhMyPoshCache -Encoding utf8
