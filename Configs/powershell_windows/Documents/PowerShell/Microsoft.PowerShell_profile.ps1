@@ -6,8 +6,12 @@
 # PowerShell 7.4+ tiene además un bug conocido donde el prompt de oh-my-posh
 # (íconos/símbolos en ciertos rangos Unicode) sale mal codificado a menos que
 # se fuerce también el InputEncoding de la consola, no solo el OutputEncoding.
+#
+# No hace falta `chcp 65001`: asignar [Console]::OutputEncoding ya llama a la
+# misma API de Windows (SetConsoleOutputCP) y deja la consola en 65001. Probado:
+# una consola nueva arranca en 437 y con solo esta línea pasa a 65001. Quitar
+# el chcp ahorra ~50 ms de arranque (lanzaba un proceso).
 $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding
-chcp 65001 > $null
 
 # =============================================================================
 # 0.1 MODO ESTRICTO
@@ -21,6 +25,11 @@ Set-StrictMode -Version Latest
 # 1. VARIABLES DE ENTORNO
 # =============================================================================
 $env:EDITOR = 'nvim'
+
+# Windows define USERPROFILE pero no HOME. PowerShell tiene su propia $HOME (por
+# eso ~ funciona aquí), pero los programas externos lanzados desde esta sesión
+# ven %HOME% vacío, y varias herramientas de origen Unix lo buscan primero.
+if (-not $env:HOME) { $env:HOME = $env:USERPROFILE }
 
 # Expone las herramientas GNU reales que trae Git for Windows (grep, sed, awk,
 # find, xargs, diff, etc.) con la misma sintaxis exacta que en Linux — evita
@@ -159,6 +168,15 @@ function which {
 function mkcd ($Path) {
     New-Item -ItemType Directory -Path $Path -Force | Out-Null
     Set-Location $Path
+}
+
+# dot: ir al repo de dotfiles y ver qué cambió. Los archivos de configuración
+# de $HOME son enlaces al repo (tuckr), así que editar el perfil, el prompt o
+# el .gitconfig ya deja el cambio ahí; esto es el atajo para verlo y subirlo:
+#   dot  →  git commit -am "..."  →  git push
+function dot {
+    Set-Location $env:APPDATA\dotfiles
+    git status --short
 }
 
 # cp -> Copy-Item con creación automática de directorios
@@ -411,78 +429,87 @@ function zip {
     }
 }
 
-# =============================================================================
-# 6. PSREADLINE (Sugerencias Inteligentes y Resaltado de Sintaxis)
-# =============================================================================
-Set-PSReadLineOption -EditMode Emacs
-Set-PSReadLineOption -PredictionSource History
-Set-PSReadLineOption -PredictionViewStyle ListView # Despliegue estilo fzf-tab
-Set-PSReadLineOption -BellStyle None # Sin beep audible al completar/errar
-Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete # Menu de Tab estilo zsh
+# Todo lo que sigue configura el editor de línea (PSReadLine): predicciones,
+# colores, atajos. Solo tiene sentido si hay alguien tecleando. Cuando otro
+# programa lanza `pwsh -Command ...` sin ventana (un script, una tarea, VS Code
+# por debajo), el perfil se carga igual y PSReadLine falla con "the console
+# output doesn't support virtual terminal processing". No rompe nada, pero
+# ensucia la salida. Con esta condición, sin terminal se salta el bloque.
+if (-not [Console]::IsOutputRedirected) {
 
-# Paleta cromática de comandos en consola
-Set-PSReadLineOption -Colors @{
-    Command   = 'Green'
-    Parameter = 'Gray'
-    Operator  = 'Magenta'
-    Variable  = 'Cyan'
-    String    = 'Yellow'
-    Number    = 'Blue'
-    Type      = 'Gray'
-    Comment   = 'DarkGray'
-}
+    # =============================================================================
+    # 6. PSREADLINE (Sugerencias Inteligentes y Resaltado de Sintaxis)
+    # =============================================================================
+    Set-PSReadLineOption -EditMode Emacs
+    Set-PSReadLineOption -PredictionSource History
+    Set-PSReadLineOption -PredictionViewStyle ListView # Despliegue estilo fzf-tab
+    Set-PSReadLineOption -BellStyle None # Sin beep audible al completar/errar
+    Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete # Menu de Tab estilo zsh
 
-# Filtro preventivo del historial (No almacena comandos cortos de ruido operativo)
-Set-PSReadLineOption -AddToHistoryHandler {
-    param($line)
-    $ignoreList = @('ls', 'll', 'la', 'tree', 'c', 'exit', 'qq', 'history', 'clear')
-    if ($ignoreList -contains $line.Trim()) { return $false }
-    if ($line.StartsWith(' ')) { return $false }
-    return $true
-}
-
-# =============================================================================
-# 7. WIDGETS INTERACTIVOS DE FZF (Réplica de Atajos de Teclado de Linux)
-# =============================================================================
-
-# Widget Ctrl+R: Extracción de historial limpio inyectado directamente en fzf
-function fzf-history-widget {
-    $History = [Microsoft.PowerShell.PSConsoleReadLine]::GetHistoryItems() |
-    Select-Object -Property CommandLine -Unique |
-    ForEach-Object { $_.CommandLine }
-
-    if ($History) {
-        $Selected = $History | fzf --tac --layout=reverse --height=40% --border --info=inline --prompt="History > "
-        if ($Selected) {
-            [Microsoft.PowerShell.PSConsoleReadLine]::DeleteLine()
-            [Microsoft.PowerShell.PSConsoleReadLine]::Insert($Selected)
-        }
+    # Paleta cromática de comandos en consola
+    Set-PSReadLineOption -Colors @{
+        Command   = 'Green'
+        Parameter = 'Gray'
+        Operator  = 'Magenta'
+        Variable  = 'Cyan'
+        String    = 'Yellow'
+        Number    = 'Blue'
+        Type      = 'Gray'
+        Comment   = 'DarkGray'
     }
-    [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
-}
 
-# Widget Alt+T: Enumeración veloz de archivos con fd pegada en la posición del cursor
-function fzf-file-widget {
-    if (Get-Command fd, fzf -ErrorAction SilentlyContinue) {
-        $Selected = fd --type f --hidden --exclude .git | fzf --layout=reverse --height=40% --border --info=inline --prompt="Files > "
-        if ($Selected) {
-            [Microsoft.PowerShell.PSConsoleReadLine]::Insert($Selected)
-        }
+    # Filtro preventivo del historial (No almacena comandos cortos de ruido operativo)
+    Set-PSReadLineOption -AddToHistoryHandler {
+        param($line)
+        $ignoreList = @('ls', 'll', 'la', 'tree', 'c', 'exit', 'qq', 'history', 'clear')
+        if ($ignoreList -contains $line.Trim()) { return $false }
+        if ($line.StartsWith(' ')) { return $false }
+        return $true
     }
-    [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
-}
 
-# Registro formal de atajos de teclado en el motor de lectura de la terminal
-Set-PSReadLineKeyHandler -Key 'Ctrl+r' -ScriptBlock { fzf-history-widget }
-Set-PSReadLineKeyHandler -Key 'Alt+t' -ScriptBlock { fzf-file-widget }
+    # =============================================================================
+    # 7. WIDGETS INTERACTIVOS DE FZF (Réplica de Atajos de Teclado de Linux)
+    # =============================================================================
 
-# Búsqueda en historial optimizada con posicionamiento de cursor al final de la línea
-Set-PSReadLineKeyHandler -Key UpArrow -ScriptBlock {
-    [Microsoft.PowerShell.PSConsoleReadLine]::HistorySearchBackward()
-    [Microsoft.PowerShell.PSConsoleReadLine]::EndOfLine()
-}
+    # Widget Ctrl+R: Extracción de historial limpio inyectado directamente en fzf
+    function fzf-history-widget {
+        $History = [Microsoft.PowerShell.PSConsoleReadLine]::GetHistoryItems() |
+        Select-Object -Property CommandLine -Unique |
+        ForEach-Object { $_.CommandLine }
 
-Set-PSReadLineKeyHandler -Key DownArrow -ScriptBlock {
-    [Microsoft.PowerShell.PSConsoleReadLine]::HistorySearchForward()
-    [Microsoft.PowerShell.PSConsoleReadLine]::EndOfLine()
+        if ($History) {
+            $Selected = $History | fzf --tac --layout=reverse --height=40% --border --info=inline --prompt="History > "
+            if ($Selected) {
+                [Microsoft.PowerShell.PSConsoleReadLine]::DeleteLine()
+                [Microsoft.PowerShell.PSConsoleReadLine]::Insert($Selected)
+            }
+        }
+        [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+    }
+
+    # Widget Alt+T: Enumeración veloz de archivos con fd pegada en la posición del cursor
+    function fzf-file-widget {
+        if (Get-Command fd, fzf -ErrorAction SilentlyContinue) {
+            $Selected = fd --type f --hidden --exclude .git | fzf --layout=reverse --height=40% --border --info=inline --prompt="Files > "
+            if ($Selected) {
+                [Microsoft.PowerShell.PSConsoleReadLine]::Insert($Selected)
+            }
+        }
+        [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+    }
+
+    # Registro formal de atajos de teclado en el motor de lectura de la terminal
+    Set-PSReadLineKeyHandler -Key 'Ctrl+r' -ScriptBlock { fzf-history-widget }
+    Set-PSReadLineKeyHandler -Key 'Alt+t' -ScriptBlock { fzf-file-widget }
+
+    # Búsqueda en historial optimizada con posicionamiento de cursor al final de la línea
+    Set-PSReadLineKeyHandler -Key UpArrow -ScriptBlock {
+        [Microsoft.PowerShell.PSConsoleReadLine]::HistorySearchBackward()
+        [Microsoft.PowerShell.PSConsoleReadLine]::EndOfLine()
+    }
+
+    Set-PSReadLineKeyHandler -Key DownArrow -ScriptBlock {
+        [Microsoft.PowerShell.PSConsoleReadLine]::HistorySearchForward()
+        [Microsoft.PowerShell.PSConsoleReadLine]::EndOfLine()
+    }
 }
